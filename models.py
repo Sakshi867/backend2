@@ -11,12 +11,14 @@ class DailyMetrics(Base):
     # Core Metrics
     screen_time = Column(Float, default=0.0)
     tasks_completed = Column(Integer, default=0)
+    motion_score = Column(Float, default=0.0)
 
     # Energy Intelligence Fields
     energy_score = Column(Float, nullable=True)
     energy_level = Column(String, nullable=True)
     energy_confidence = Column(Float, nullable=True)
     energy_calc_version = Column(Integer, default=1)
+    primary_driver = Column(String, nullable=True)
 
     # Internal Metadata
     created_at = Column(DateTime(timezone=True), server_default=func.now())
