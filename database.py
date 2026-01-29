@@ -1,59 +1,47 @@
 import os
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, make_url
 from sqlalchemy.orm import sessionmaker, declarative_base
 from sqlalchemy.pool import NullPool
 
-# 1. Direct fetch with cleaning
-# We use os.environ.get directly to bypass any potential issues in config.py
-raw_url = os.environ.get("DATABASE_URL", "")
+# 1. Get the raw URL
+raw_url = os.environ.get("DATABASE_URL", "").strip()
 
-def get_clean_url(url: str) -> str:
-    if not url:
-        return ""
-    
-    # Remove invisible characters like \r, \n, spaces, or quotes
-    # This happens often when copy-pasting into Render
-    clean_url = url.strip().replace('"', '').replace("'", "").replace('\r', '')
-    
-    # Standardize the prefix
-    if clean_url.startswith("postgres://"):
-        clean_url = clean_url.replace("postgres://", "postgresql://", 1)
-        
-    return clean_url
-
-db_url = get_clean_url(raw_url)
-
-# 2. Validation Check
-if not db_url:
-    print("❌ CRITICAL ERROR: DATABASE_URL is empty or not found in environment!")
-else:
-    # Log the host (masked) so you can see it in Render logs to confirm it's loaded
+def create_safe_engine():
     try:
-        masked_host = db_url.split("@")[1]
-        print(f"✅ Database variable loaded. Target host: {masked_host}")
-    except:
-        print("❌ CRITICAL ERROR: DATABASE_URL exists but is malformed (missing '@')")
+        if not raw_url:
+            raise ValueError("DATABASE_URL is missing")
 
-# 3. SQLAlchemy Setup
-# We use a try/except here so the app gives a better error if it still fails
-try:
-    engine = create_engine(
-        db_url,
-        connect_args={"sslmode": "require"},
-        poolclass=NullPool
-    )
-except Exception as e:
-    print(f"❌ SQLAlchemy Engine Error: {e}")
-    # We set a dummy engine to prevent the import from crashing the whole app immediately
-    # though the app will fail when it tries to query.
-    engine = None
+        # Clean the string of quotes or hidden characters
+        clean_url = raw_url.replace('"', '').replace("'", "").replace('\r', '').strip()
+        
+        # Fix the prefix
+        if clean_url.startswith("postgres://"):
+            clean_url = clean_url.replace("postgres://", "postgresql://", 1)
 
+        # DEBUG: Log the host to verify the variable is present
+        print(f"✅ Attempting connection to: {clean_url.split('@')[-1]}")
+
+        # MANUALLY parse the URL to bypass the faulty string parser
+        url_obj = make_url(clean_url)
+
+        return create_engine(
+            url_obj,
+            connect_args={"sslmode": "require"},
+            poolclass=NullPool
+        )
+    except Exception as e:
+        print(f"❌ CRITICAL ENGINE FAILURE: {e}")
+        return None
+
+# Initialize
+engine = create_safe_engine()
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
 def get_db():
     if engine is None:
-        raise Exception("Database engine was not initialized properly.")
+        print("❌ get_db called but engine is None")
+        return
     db = SessionLocal()
     try:
         yield db
