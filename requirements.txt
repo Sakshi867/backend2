@@ -8,3 +8,4 @@ firebase-admin
 httpx
 pytest
 pytest-asyncio
+gunicorn
