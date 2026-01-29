@@ -17,6 +17,4 @@ async def create_daily_metrics(
         db_metrics = metrics_service.upsert_daily_metrics(db, metrics, user_id)
         return db_metrics
     except Exception as e:
-        import traceback
-        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))

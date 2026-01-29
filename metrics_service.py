@@ -35,6 +35,7 @@ def upsert_daily_metrics(db: Session, metrics_data: DailyMetricsCreate, user_id:
     db_record.energy_level = energy_result["energy_level"]
     db_record.energy_confidence = energy_result["energy_confidence"]
     db_record.energy_calc_version = energy_result["energy_calc_version"]
+    db_record.primary_driver = energy_result.get("primary_driver")
     
     db.commit()
     db.refresh(db_record)
