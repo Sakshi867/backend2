@@ -1,10 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from app.db.database import get_db
-from app.schemas.metrics import DailyMetricsCreate, DailyMetricsResponse
-from app.core.security import get_current_user
-from app.services import metrics_service
-from datetime import datetime
+from database import get_db
+from schemas import DailyMetricsCreate, DailyMetricsResponse
+from security import get_current_user
+import metrics_service
 
 router = APIRouter(prefix="/metrics", tags=["metrics"])
 
@@ -18,4 +17,6 @@ async def create_daily_metrics(
         db_metrics = metrics_service.upsert_daily_metrics(db, metrics, user_id)
         return db_metrics
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
