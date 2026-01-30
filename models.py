@@ -28,3 +28,19 @@ class DailyMetrics(Base):
         UniqueConstraint('user_id', 'date', name='_user_date_uc'),
         Index('idx_user_id_date', 'user_id', 'date'),
     )
+
+class SensorMetric(Base):
+    __tablename__ = "sensor_metrics"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(String, index=True, nullable=False)
+    timestamp = Column(DateTime(timezone=True), index=True, nullable=False)
+    data_type = Column(String, index=True, nullable=False)  # e.g., 'accelerometer', 'screen_on', 'app_usage'
+    payload = Column(String, nullable=False) # Storing JSON string for flexibility (SQLite compatible)
+    
+    # Internal Metadata
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    __table_args__ = (
+        Index('idx_sensor_user_time', 'user_id', 'timestamp'),
+    )

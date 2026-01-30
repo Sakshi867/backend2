@@ -10,6 +10,7 @@ class Settings(BaseSettings):
     JWT_SECRET_KEY: str = "your-secret"
     JWT_ALGORITHM: str = "HS256"
     ENVIRONMENT: str = "development"
+    BACKEND3_URL: Optional[str] = "http://localhost:8001"
 
     model_config = {
         "env_file": ".env",
