@@ -24,9 +24,13 @@ def create_safe_engine():
         # MANUALLY parse the URL to bypass the faulty string parser
         url_obj = make_url(clean_url)
 
+        connect_args = {}
+        if "postgresql" in url_obj.drivername:
+            connect_args["sslmode"] = "require"
+
         return create_engine(
             url_obj,
-            connect_args={"sslmode": "require"},
+            connect_args=connect_args,
             poolclass=NullPool
         )
     except Exception as e:
